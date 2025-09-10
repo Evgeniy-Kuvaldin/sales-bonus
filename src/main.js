@@ -67,7 +67,7 @@ function analyzeSalesData(data, options) {
 
     // @TODO: Индексация продавцов и товаров для быстрого доступа
     const sellerIndex = Object.fromEntries(
-        data.sellers.map(seller => [seller.id, seller])
+        sellerStats.map(seller => [seller.id, seller])
     );
 
     const productIndex = Object.fromEntries(
@@ -78,7 +78,7 @@ function analyzeSalesData(data, options) {
     data.purchase_records.forEach(record => { // Чек 
         const seller = sellerIndex[record.seller_id]; // Продавец
         seller.sales_count ++;// Увеличить количество продаж 
-        seller.revenue += record.total_amount;// Увеличить общую сумму всех продаж
+        // Увеличить общую сумму всех продаж
 
         // Расчёт прибыли для каждого товара
         record.items.forEach(item => {
@@ -101,9 +101,10 @@ function analyzeSalesData(data, options) {
     });
 
     // @TODO: Сортировка продавцов по прибыли
-    sellerStats.sort((a, b) => a - b);
+    sellerStats.sort((a, b) => b.profit - a.profit);
 
     // @TODO: Назначение премий на основе ранжирования
+    const total = sellerStats.length;
     sellerStats.forEach((seller, index) => {
         seller.bonus = calculateBonus(index, total, seller);
 
