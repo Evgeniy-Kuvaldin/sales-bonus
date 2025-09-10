@@ -21,6 +21,7 @@ function calculateSimpleRevenue(purchase, _product) { // _product - игнори
 function calculateBonusByProfit(index, total, seller) {
     // @TODO: Расчет бонуса от позиции в рейтинге
     const {profit} = seller;
+
     if (index === 0) {
         return 0.15 * profit;
     } else if (index === 1 || index === 2) {
@@ -82,17 +83,20 @@ function analyzeSalesData(data, options) {
         // Расчёт прибыли для каждого товара
         record.items.forEach(item => {
             const product = productIndex[item.sku]; // Товар
+
             const cost = product.purchase_price * item.quantity;// Посчитать себестоимость (cost) товара как product.purchase_price, умноженную на количество товаров из чека
-            seller.revenue += cost * calculateRevenue(item, product);// Посчитать выручку (revenue) с учётом скидки через функцию calculateRevenue
-            // Посчитать прибыль: выручка минус себестоимость
+            const itemRevenue = calculateRevenue(item, product);
+
+            seller.revenue += itemRevenue;// Посчитать выручку (revenue) с учётом скидки через функцию calculateRevenue
+            seller.profit += itemRevenue - cost;// Посчитать прибыль: выручка минус себестоимость
         // Увеличить общую накопленную прибыль (profit) у продавца  
 
             // Учёт количества проданных товаров
             if (!seller.products_sold[item.sku]) {
                 seller.products_sold[item.sku] = 0;
-            } else {
-                seller.products_sold[item.sku] += seller.products_sold[item.sku].quantity;
-            } // По артикулу товара увеличить его проданное количество у продавца
+            } 
+            seller.products_sold[item.sku] += item.quantity;
+             // По артикулу товара увеличить его проданное количество у продавца
         });
     });
 
@@ -103,7 +107,7 @@ function analyzeSalesData(data, options) {
     sellerStats.forEach((seller, index) => {
         seller.bonus = calculateBonus(index, total, seller);
 
-        const arrayProducts = Object.entries(seller.products_sold).map([sku, quantity] => 
+        const arrayProducts = Object.entries(seller.products_sold).map(([sku, quantity]) =>
             ({
                 sku,
                 quantity
